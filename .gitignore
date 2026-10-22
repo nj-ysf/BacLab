@@ -1,0 +1,17 @@
+# Workspace-level protection if Git is initialized here later.
+.env
+.env.*
+!.env.example
+node_modules/
+.venv/
+dist/
+__pycache__/
+.pytest_cache/
+.npm-cache/
+pytest-cache-files-*/
+*.log
+*.tsbuildinfo
+.claude/settings.local.json
+
+# Private working notes
+prompt.txt

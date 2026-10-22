@@ -1,0 +1,3 @@
+import {Pause,Play,RotateCcw,SkipBack} from 'lucide-react';
+import {useApp} from '../main';
+export function SimulationControls({playing,toggle,replay,reset,disabled}:{playing:boolean;toggle:()=>void;replay:()=>void;reset:()=>void;disabled:boolean}){const {t}=useApp();return <div className="simulation-controls"><button className="button primary" disabled={disabled} onClick={toggle}>{playing?<Pause size={17}/>:<Play size={17}/>} {t(playing?'pause':'play')}</button><button className="button secondary" disabled={disabled} onClick={replay}><RotateCcw size={16}/>{t('replay')}</button><button className="icon-button" aria-label={t('reset')} onClick={reset}><SkipBack size={18}/></button><span>{t('orbit_hint')}</span></div>}

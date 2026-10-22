@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.venv/
+__pycache__/
+.pytest_cache/
+.env
+.env.*
+!.env.example
+*.log
+.npm-cache/
+pytest-cache-files-*/
+*.tsbuildinfo
+.claude/settings.local.json

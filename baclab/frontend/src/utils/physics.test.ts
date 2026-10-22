@@ -1,0 +1,18 @@
+import {describe,it,expect} from 'vitest';
+import {solve,normalize,validate} from './physics';
+const p={initial_speed:20,launch_angle:45,initial_height:0,gravity:9.81};
+describe('deterministic mechanics',()=>{
+ it('solves canonical projectile',()=>{const r=solve('projectile_motion',p);expect(r.range).toBeCloseTo(40.7747,3);expect(r.maxHeight).toBeCloseTo(10.1937,3);expect(r.at(r.time).y).toBeCloseTo(0);});
+ it('accounts for elevated launch and energy conservation',()=>{const r=solve('projectile_motion',{...p,initial_height:20});expect(r.time).toBeGreaterThan(solve('projectile_motion',p).time);expect(r.at(r.time).velocity**2).toBeCloseTo(400+2*9.81*20);});
+ it('handles horizontal ground launch',()=>expect(solve('projectile_motion',{...p,launch_angle:0}).time).toBe(0));
+ it('free fall and initial upward velocity',()=>{expect(solve('free_fall',{initial_height:20,initial_velocity:0,gravity:9.81}).time).toBeCloseTo(Math.sqrt(40/9.81));expect(solve('free_fall',{initial_height:0,initial_velocity:10,gravity:10}).time).toBe(2)});
+ it('distinguishes distance from displacement',()=>{const r=solve('uniform_motion',{initial_position:20,speed:-15,duration:10});expect(r.finalPosition).toBe(-130);expect(r.distance).toBe(150)});
+ it('converts compatible units only',()=>{expect(normalize(72,'km/h','initial_speed')).toBe(20);expect(normalize(200,'cm','initial_height')).toBe(2);expect(normalize(Math.PI,'rad','launch_angle')).toBe(180);expect(()=>normalize(1,'s','initial_height')).toThrow()});
+ it('exposes velocity components, apex time and mid-flight position',()=>{const r=solve('projectile_motion',p);const c=20*Math.SQRT1_2;expect(r.vx0).toBeCloseTo(c,6);expect(r.vy0).toBeCloseTo(c,6);expect(r.peakTime).toBeCloseTo(c/9.81,6);expect(r.time).toBeCloseTo(2*c/9.81,6);const m=r.at(1);expect(m.x).toBeCloseTo(c,6);expect(m.y).toBeCloseTo(c-4.905,6);expect(m.vx).toBeCloseTo(c,6);expect(m.vy).toBeCloseTo(c-9.81,6)});
+ it('horizontal launch from a height',()=>{const r=solve('projectile_motion',{...p,launch_angle:0,initial_height:20});const t=Math.sqrt(40/9.81);expect(r.time).toBeCloseTo(t,9);expect(r.range).toBeCloseTo(20*t,9);expect(r.peakTime).toBe(0);expect(r.maxHeight).toBe(20);expect(r.impactVelocity).toBeCloseTo(-9.81*t,9)});
+ it('vertical launch has negligible range and v²/2g apex',()=>{const r=solve('projectile_motion',{...p,launch_angle:90});expect(Math.abs(r.range)).toBeLessThan(1e-9);expect(r.maxHeight).toBeCloseTo(400/(2*9.81),9)});
+ it('zero speed at ground gives a zero-duration flight',()=>{const r=solve('projectile_motion',{...p,initial_speed:0});expect(r.time).toBe(0);expect(r.range).toBe(0);expect(r.maxHeight).toBe(0);expect(r.samples.every(s=>s.x===0&&s.y===0)).toBe(true)});
+ it('uniform position over time and upward free fall from a height',()=>{const u=solve('uniform_motion',{initial_position:5,speed:3,duration:4});expect(u.at(2).x).toBe(11);expect(u.at(99).x).toBe(17);const f=solve('free_fall',{initial_height:10,initial_velocity:5,gravity:10});expect(f.peakTime).toBe(0.5);expect(f.maxHeight).toBe(11.25);expect(f.time).toBeCloseTo(0.5+Math.sqrt(2.25),9);expect(f.impactVelocity).toBeCloseTo(-Math.sqrt(225),9)});
+ it('rejects out-of-range angles',()=>{expect(validate('projectile_motion',{...p,launch_angle:91}).length).toBe(1);expect(validate('projectile_motion',{...p,launch_angle:-1}).length).toBe(1)});
+ it('rejects nonfinite and nonphysical inputs',()=>{for(const gravity of [0,-1,NaN,Infinity])expect(validate('projectile_motion',{...p,gravity}).length).toBeGreaterThan(0);expect(()=>solve('projectile_motion',{...p,initial_height:-1})).toThrow()});
+});

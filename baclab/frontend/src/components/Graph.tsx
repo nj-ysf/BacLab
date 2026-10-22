@@ -1,0 +1,9 @@
+import {Chart as ChartJS,LinearScale,PointElement,LineElement,LineController,Tooltip,Legend} from 'chart.js';
+import {Line} from 'react-chartjs-2';
+import {memo,useMemo,useState} from 'react';
+import type {Kind} from '../types';
+import {solve} from '../utils/physics';
+import {useApp} from '../main';
+ChartJS.register(LinearScale,PointElement,LineElement,LineController,Tooltip,Legend);
+// Memoized so animation telemetry ticks in the lab page do not rebuild the chart.
+export const Graph=memo(function Graph({kind,result}:{kind:Kind;result:ReturnType<typeof solve>}){const {t}=useApp();const [velocity,setVelocity]=useState(false);const xy=kind==='projectile_motion'&&!velocity;const points=useMemo(()=>result.samples.map(s=>({x:xy?s.x:s.t,y:velocity?(kind==='free_fall'?s.vy:s.velocity):kind==='uniform_motion'?s.x:s.y})),[result,xy,velocity,kind]);return <section className="panel graph-panel"><div className="panel-heading"><h3>{t('graph')}</h3>{kind!=='uniform_motion'&&<select aria-label="Type de graphique" value={velocity?'velocity':'position'} onChange={e=>setVelocity(e.target.value==='velocity')}><option value="position">{xy?'y(x)':'y(t)'}</option><option value="velocity">{kind==='free_fall'?'vᵧ(t)':'|v|(t)'}</option></select>}</div><div className="chart"><Line data={{datasets:[{label:velocity?'v (m/s)':kind==='uniform_motion'?'x (m)':'y (m)',data:points,borderColor:'#61d7ce',backgroundColor:'#61d7ce',pointRadius:0,borderWidth:2,tension:0.15}]}} options={{animation:false,responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{type:'linear',title:{display:true,text:xy?'x (m)':'t (s)',color:'#99abc4'},ticks:{color:'#8c9bb1',maxTicksLimit:7},grid:{color:'#233249'}},y:{title:{display:true,text:velocity?'v (m/s)':kind==='uniform_motion'?'x (m)':'y (m)',color:'#99abc4'},ticks:{color:'#8c9bb1',maxTicksLimit:6},grid:{color:'#233249'}}}}}/></div></section>})
